@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reconstruct Image from Server</title>
+</head>
+<body>
+    <h1>Reconstruct Image from Server</h1>
+    <label for="image-id">Enter Image ID:</label>
+    <input type="number" id="image-id" placeholder="1">
+    <button id="recover-button">Recover Image</button>
+    <div>
+        <p id="status-message" style="color: red;"></p>
+        <img id="reconstructed-image" alt="Reconstructed Image" style="max-width: 100%; display: none; border: 1px solid #ccc;">
+    </div>
+    <script>
+        document.getElementById('recover-button').addEventListener('click', async () => {
+            const imageId = document.getElementById('image-id').value.trim();
+            const statusMessage = document.getElementById('status-message');
+            const imageElement = document.getElementById('reconstructed-image');
+
+            // Clear previous status and hide the image
+            statusMessage.textContent = '';
+            imageElement.style.display = 'none';
+
+            if (!imageId) {
+                statusMessage.textContent = 'Please enter a valid image ID.';
+                return;
+            }
+
+            try {
+                // Fetch the reconstructed Base64 data from the server
+                const response = await fetch(`http://127.0.0.1:3000/reconstruct/${imageId}`);
+                const data = await response.json();
+
+                if (response.ok && data.reconstructedData) {
+                    // Set the Base64 image as the src of the img element
+                    imageElement.src = `data:image/png;base64,${data.reconstructedData}`; // Assume the image is PNG
+                    imageElement.style.display = 'block'; // Show the image
+                } else {
+                    statusMessage.textContent = data.error || 'Failed to reconstruct the image.';
+                }
+            } catch (error) {
+                console.error('Error fetching or displaying the image:', error);
+                statusMessage.textContent = 'Error: Could not fetch the reconstructed image.';
+            }
+        });
+    </script>
+</body>
+</html>

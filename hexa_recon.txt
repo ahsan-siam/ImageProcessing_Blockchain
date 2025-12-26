@@ -1,0 +1,46 @@
+app.get('/reconstruct/:imageId', async (req, res) => {
+    const startTime2 = performance.now();
+    const { imageId } = req.params;
+
+    try {
+        // Parse imageId to ensure it's a valid number
+        const parsedImageId = parseInt(imageId, 10);
+        if (isNaN(parsedImageId)) {
+            return res.status(400).json({ error: 'Invalid imageId parameter. Must be a number.' });
+        }
+
+        // Fetch chunks from the contract
+        const chunks = await contract.methods.getChunks(parsedImageId).call();
+
+        // Check if chunks array is valid
+        if (!chunks || chunks.length === 0) {
+            return res.status(404).json({ error: 'No chunks found for the given imageId.' });
+        }
+
+        // Create a mutable copy of the chunks array and sort it
+        const sortedChunks = [...chunks].sort((a, b) => a.index - b.index);
+
+        // Reconstruct the image data
+        const reconstructedData = sortedChunks.map(chunk => chunk.data).join('');
+
+        // Debugging: Log reconstructedData
+        const endTime2 = performance.now();
+        const executionTime2 = endTime2 - startTime2;
+        console.log(' Retrieval Time:' + executionTime2 + 'ms');
+        console.log('Reconstructed Base64 data:', reconstructedData);
+
+        // Convert the reconstructed data from hex to a string
+        const hexDecodedString = Buffer.from(reconstructedData, 'hex').toString('utf8');
+
+        // Validate the hexDecodedString
+        if (!hexDecodedString || hexDecodedString.trim() === '') {
+            return res.status(500).json({ error: 'Decoded data is empty or invalid.' });
+        }
+
+        // Send the decoded string
+        res.json({ message: 'Image reconstructed successfully!', reconstructedData: reconstructedData });
+    } catch (error) {
+        console.error('Error reconstructing image:', error);
+        res.status(500).json({ error: 'Failed to reconstruct image.' });
+    }
+});

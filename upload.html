@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Blockchain Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Image</h1>
+        <form id="uploadForm">
+            <input type="file" id="imageInput" name="image" accept="image/*" required>
+            <button type="submit">Upload and Store</button>
+        </form>
+
+        <div class="output" id="output"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('imageInput');
+            const output = document.getElementById('output');
+
+            if (!fileInput.files.length) {
+                output.textContent = 'Please select an image to upload.';
+                return;
+            }
+
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                output.textContent = 'Uploading...';
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    output.innerHTML = `<p>Image uploaded successfully!</p>
+                        <p><strong>Image ID:</strong> ${result.imageId}</p>`;
+                } else {
+                    output.textContent = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                output.textContent = 'Failed to upload the image. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>
